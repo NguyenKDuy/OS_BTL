@@ -8,7 +8,8 @@
 static struct queue_t ready_queue;
 static struct queue_t run_queue;
 static pthread_mutex_t queue_lock;
-
+//TODO: add current ready queue
+static int current_ready_queue = 0;
 #ifdef MLQ_SCHED
 static struct queue_t mlq_ready_queue[MAX_PRIO];
 #endif
@@ -48,12 +49,30 @@ struct pcb_t * get_mlq_proc(void) {
 	* Remember to use lock to protect the queue.
 	* */
 	pthread_mutex_lock(&queue_lock);
-	int highest_prio;
-	for (highest_prio = 0; highest_prio < MAX_PRIO; highest_prio++) {
-		if (!empty(&mlq_ready_queue[highest_prio])){
-			proc = dequeue(&mlq_ready_queue[highest_prio]);
+	int empty_done_queue = 0;
+	while(1) {
+		if (!empty(&mlq_ready_queue[current_ready_queue])) {
+			if (mlq_ready_queue[current_ready_queue].slot >0) {
+				proc = dequeue(&mlq_ready_queue[current_ready_queue]);
+				mlq_ready_queue[current_ready_queue].slot--;
+				// printf ("queue: %d, slot: %d", current_ready_queue, mlq_ready_queue[current_ready_queue].slot);
+				break;
+			}
+		}
+		else {
+			empty_done_queue++;
+		}
+		if (empty_done_queue == MAX_PRIO) {
+			current_ready_queue = 0;
 			break;
 		}
+		if (current_ready_queue == MAX_PRIO-1) {
+			for (int j = 0; j < MAX_PRIO; j++){
+				mlq_ready_queue[j].slot = MAX_PRIO - j;
+			}
+			// printf("reset slots");
+		}
+		current_ready_queue = (current_ready_queue+1)%MAX_PRIO;
 	}
 	pthread_mutex_unlock(&queue_lock);
 	return proc;

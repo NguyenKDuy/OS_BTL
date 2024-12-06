@@ -216,7 +216,7 @@ int main(int argc, char * argv[]) {
 	strcat(path, "input/");
 	strcat(path, argv[1]);
 	read_config(path);
-
+	
 	pthread_t * cpu = (pthread_t*)malloc(num_cpus * sizeof(pthread_t));
 	struct cpu_args * args =
 		(struct cpu_args*)malloc(sizeof(struct cpu_args) * num_cpus);
@@ -227,7 +227,9 @@ int main(int argc, char * argv[]) {
 	for (i = 0; i < num_cpus; i++) {
 		args[i].timer_id = attach_event();
 		args[i].id = i;
+		
 	}
+
 	struct timer_id_t * ld_event = attach_event();
 	start_timer();
 
