@@ -212,7 +212,7 @@ int __swap_cp_page(struct memphy_struct *mpsrc, int srcfpn,
  * @mm:     self mm
  * @caller: mm owner
  */
-int init_mm(struct mm_struct *mm, struct pcb_t *caller)
+int init_mm(struct mm_struct *mm, struct pcb_t *caller, int heap_sz)
 {
   struct vm_area_struct * vma0 = malloc(sizeof(struct vm_area_struct));
   struct vm_area_struct * vma1 = malloc(sizeof(struct vm_area_struct));
@@ -224,28 +224,28 @@ int init_mm(struct mm_struct *mm, struct pcb_t *caller)
   vma0->vm_start = 0;
   vma0->vm_end = vma0->vm_start;
   vma0->sbrk = vma0->vm_start;
-  struct vm_rg_struct *first_rg = init_vm_rg(vma0->vm_start, vma0->vm_end, 0);
+  struct vm_rg_struct *first_rg = init_vm_rg(vma0->vm_start, vma0->vm_end, vma0->vm_id);
   enlist_vm_rg_node(&vma0->vm_freerg_list, first_rg);
 
   /* TODO update VMA0 next */
-  // vma0->next = ...
+  vma0->vm_next = vma1;
 
   /* TODO: update one vma for HEAP */
-  // vma1->vm_id = ...
-  // vma1->vm_start = ...
-  // vma1->vm_end = ...
-  // vma1->sbrk = ...
-  // enlist_vm_rg_node(&vma1...)
-  // vma1->vm_next
-  // enlist_vm_rg_node(&vma1->vm_freerg_list,...)
+  vma1->vm_id = 1;
+  vma1->vm_start = heap_sz;
+  vma1->vm_end = heap_sz;
+  vma1->sbrk = vma1->vm_start;
+  struct vm_rg_struct *heap_rg = init_vm_rg(vma1->vm_start, vma1->vm_end, vma1->vm_id);
+  enlist_vm_rg_node(&vma1->vm_freerg_list, heap_rg);
+  vma1->vm_next = NULL;
 
   /* Point vma owner backward */
   vma0->vm_mm = mm; 
   vma1->vm_mm = mm;
 
   /* TODO: update mmap */
-  //mm->mmap = ...
-
+  mm->mmap = vma0;
+  
   return 0;
 }
 

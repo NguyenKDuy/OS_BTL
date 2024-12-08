@@ -62,6 +62,7 @@ struct pcb_t * load(const char * path) {
 	for (i = 0; i < proc->code->size; i++) {
 		fscanf(file, "%s", opcode);
 		proc->code->text[i].opcode = get_opcode(opcode);
+		// printf("%s", proc->code->text[i].opcode);
 		switch(proc->code->text[i].opcode) {
 		case CALC:
 			break;

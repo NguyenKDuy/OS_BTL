@@ -96,7 +96,7 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
 
     return 0;
   }
-
+  
   /* TODO: get_free_vmrg_area FAILED handle the region management (Fig.6)*/
 
   /* TODO retrive current vma if needed, current comment out due to compiler redundant warning*/
@@ -499,9 +499,9 @@ int find_victim_page(struct mm_struct *mm, int *retpgn)
 int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_struct *newrg)
 {
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
-
+  print_list_vma(caller->mm->mmap);
   struct vm_rg_struct *rgit = cur_vma->vm_freerg_list;
-
+  print_list_rg(rgit);
   if (rgit == NULL)
     return -1;
 

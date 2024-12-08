@@ -26,7 +26,7 @@ struct mmpaging_ld_args {
 	int vmemsz;
 	struct memphy_struct *mram;
 	struct memphy_struct **mswp;
-	struct memphy_struct *active_mswp;
+	struct memphy_struct *active_mswp;		//Only one mswp active?
 	struct timer_id_t  *timer_id;
 };
 #endif
@@ -92,11 +92,11 @@ static void * cpu_routine(void * args) {
 				id, proc->pid);
 			time_left = time_slot;
 		}
-		
 		/* Run current process */
 		run(proc);
 		time_left--;
 		next_slot(timer_id);
+		
 	}
 	detach_event(timer_id);
 	pthread_exit(NULL);
@@ -126,7 +126,10 @@ static void * ld_routine(void * args) {
 #ifdef MM_PAGING_HEAP_GODOWN
 		proc->vmemsz = vmemsz;
 #endif
-		init_mm(proc->mm, proc);
+		init_mm(proc->mm, proc, proc->vmemsz);
+		// print_list_vma(proc->mm->mmap);
+		// print_list_rg(proc->mm->mmap->vm_freerg_list);
+		// print_list_rg(proc->mm->mmap->vm_next->vm_freerg_list);
 		proc->mram = mram;
 		proc->mswp = mswp;
 		proc->active_mswp = active_mswp;
@@ -178,7 +181,7 @@ static void read_config(const char * path) {
 	fscanf(file, "%d\n", &memramsz);
 	for(sit = 0; sit < PAGING_MAX_MMSWP; sit++)
 		fscanf(file, "%d", &(memswpsz[sit])); 
-#ifdef MM_PAGIMG_HEAP_GODOWN
+#ifdef MM_PAGING_HEAP_GODOWN
 	fscanf(file, "%d\n", &vmemsz);
 #endif
 
@@ -274,7 +277,6 @@ int main(int argc, char * argv[]) {
 		pthread_create(&cpu[i], NULL,
 			cpu_routine, (void*)&args[i]);
 	}
-
 	/* Wait for CPU and loader finishing */
 	for (i = 0; i < num_cpus; i++) {
 		pthread_join(cpu[i], NULL);

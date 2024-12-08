@@ -121,8 +121,7 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
 int __free(struct pcb_t *caller, int rgid);
 int __read(struct pcb_t *caller, int rgid, int offset, BYTE *data);
 int __write(struct pcb_t *caller, int rgid, int offset, BYTE value);
-int init_mm(struct mm_struct *mm, struct pcb_t *caller);
-
+int init_mm(struct mm_struct *mm, struct pcb_t *caller, int heap_sz);
 /* VM prototypes */
 int pgalloc(struct pcb_t *proc, uint32_t size, uint32_t reg_index);
 int pgmalloc(struct pcb_t *proc, uint32_t size, uint32_t reg_index);
