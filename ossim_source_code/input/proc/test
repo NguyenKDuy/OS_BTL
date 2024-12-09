@@ -1,9 +1,13 @@
-1 8
-alloc 300 0
-alloc 100 1
-alloc 100 2 
-alloc 150 3
-write 244 0 0 
-write 20 1 0 
-write 33 2 0 
-read 0 0 7
+1 12
+malloc 300 0
+malloc 300 1
+malloc 300 1
+malloc 300 1
+malloc 300 1
+alloc 300 2
+alloc 300 2
+alloc 300 2
+alloc 300 2
+alloc 300 2
+write 22 1 0
+read 1 0 3

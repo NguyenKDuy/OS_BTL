@@ -21,15 +21,9 @@ struct pcb_t * dequeue(struct queue_t * q) {
         * */
         if (empty(q) || !q)
                 return NULL;
-        int index_prio = 0;
         int size = q->size;
-        for (int i = 1; i < size; i++) {
-                if (q->proc[i]->priority < q->proc[index_prio]->priority)
-                        index_prio = i;
-        }
-
-        struct pcb_t * store = q->proc[index_prio];
-        for (int i = index_prio; i < size-1; i++) {
+        struct pcb_t * store = q->proc[0];
+        for (int i = 0; i < size-1; i++) {
                 q->proc[i] = q->proc[i+1];
         }
         q->size--;

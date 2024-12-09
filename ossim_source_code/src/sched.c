@@ -55,7 +55,6 @@ struct pcb_t * get_mlq_proc(void) {
 			if (mlq_ready_queue[current_ready_queue].slot >0) {
 				proc = dequeue(&mlq_ready_queue[current_ready_queue]);
 				mlq_ready_queue[current_ready_queue].slot--;
-				// printf ("queue: %d, slot: %d", current_ready_queue, mlq_ready_queue[current_ready_queue].slot);
 				break;
 			}
 		}
@@ -70,7 +69,6 @@ struct pcb_t * get_mlq_proc(void) {
 			for (int j = 0; j < MAX_PRIO; j++){
 				mlq_ready_queue[j].slot = MAX_PRIO - j;
 			}
-			// printf("reset slots");
 		}
 		current_ready_queue = (current_ready_queue+1)%MAX_PRIO;
 	}
