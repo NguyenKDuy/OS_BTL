@@ -406,7 +406,7 @@ int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
     end = cur_vma->vm_end;
     struct vm_area_struct *cur_vma1 = get_vma_by_num(caller->mm, 1); 
     start1 = cur_vma1->vm_start;
-    end1 = cur_vma1->sbrk;
+    end1 = cur_vma1->vm_end;
   }
   pgn_start = PAGING_PGN(start);
   pgn_end = PAGING_PGN(end);
