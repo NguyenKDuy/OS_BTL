@@ -98,28 +98,39 @@ int vmap_page_range(struct pcb_t *caller, // process call
     ret_rg->rg_end = addr + pgnum*PAGING_PAGESZ;
     ret_rg->rg_start = addr;
     ret_rg->vmaid = caller->mm->mmap->vm_id;
-    caller->mm->mmap->sbrk = ret_rg->rg_end;
+    // caller->mm->mmap->sbrk = ret_rg->rg_end;
     fpit->fp_next = frames;
+    while (pgit <pgnum && fpit->fp_next !=NULL) {
+        /* Tracking for later page replacement activities (if needed)
+        * Enqueue new usage page */
+      fpit = fpit->fp_next;
+      pte_set_fpn(&caller->mm->pgd[pgn+pgit], fpit->fpn);
+      printf("\t*Mapping Process: pgd [%d] -> fpn [%d]\n", pgn+pgit, fpit->fpn);fflush(stdout);
+      enlist_pgn_node(&caller->mm->fifo_pgn, pgn+pgit);
+      pgit++;
+      }
   }
   else {
     ret_rg->rg_end = addr - pgnum*PAGING_PAGESZ;
     ret_rg->rg_start = addr;
     ret_rg->vmaid = caller->mm->mmap->vm_id;
-    caller->mm->mmap->vm_next->sbrk = ret_rg->rg_end;
+    // caller->mm->mmap->vm_next->sbrk = ret_rg->rg_end;
+    printf("%ld, %ld, %d, %ld", ret_rg->rg_end, ret_rg->rg_start, ret_rg->vmaid, caller->mm->mmap->vm_next->sbrk);
     fpit->fp_next = frames;
+    while (pgit <pgnum && fpit->fp_next !=NULL) {
+    /* Tracking for later page replacement activities (if needed)
+    * Enqueue new usage page */
+      fpit = fpit->fp_next;
+      pte_set_fpn(&caller->mm->pgd[pgn+pgit], fpit->fpn);
+      printf("\t*Mapping Process: pgd [%d] -> fpn [%d]\n", pgn+pgit, fpit->fpn);fflush(stdout);
+      enlist_pgn_node(&caller->mm->fifo_pgn, pgn+pgit);
+      pgit++;
+    }
   }
   /* TODO map range of frame to address space 
    *      in page table pgd in caller->mm
    */
-  while (pgit <pgnum && fpit->fp_next !=NULL) {
-    /* Tracking for later page replacement activities (if needed)
-    * Enqueue new usage page */
-   fpit = fpit->fp_next;
-   pte_set_fpn(&caller->mm->pgd[pgn+pgit], fpit->fpn);
-   printf("\t*Mapping Process: pgd [%d] -> fpn [%d]\n", pgn+pgit, fpit->fpn);fflush(stdout);
-   enlist_pgn_node(&caller->mm->fifo_pgn, pgn+pgit);
-   pgit++;
-  }
+  
   return 0;
 }
 
@@ -407,21 +418,24 @@ int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
     struct vm_area_struct *cur_vma1 = get_vma_by_num(caller->mm, 1); 
     start1 = cur_vma1->vm_start;
     end1 = cur_vma1->vm_end;
+    print_list_vma(cur_vma1);
   }
   pgn_start = PAGING_PGN(start);
   pgn_end = PAGING_PGN(end);
   if (start1 != end1) {
     pgn_start1 = PAGING_PGN(start1)+1;
     pgn_end1 = PAGING_PGN(end1)+1;
+    printf("pgn_start1%d,pgn_end1%d\n",pgn_start1,pgn_end1);
     printf("print_pgtbl: %d - %d, %d - %d\n", start, end, start1, end1);
-    for(pgit = pgn_start; pgit < pgn_end; pgit++)
-  {
-     printf("%08ld: %08x\n", pgit * sizeof(uint32_t), caller->mm->pgd[pgit]);
-  }
     if (caller == NULL) {printf("NULL caller\n"); return -1;}
-    for (pgit1 = pgn_end1; pgit1 < pgn_start1; pgit1++) {
-    printf("%08ld: %08x\n", pgit1 * sizeof(uint32_t), caller->mm->pgd[pgit1]);
-  }
+    for(pgit = pgn_start; pgit < pgn_end; pgit++)
+    {
+     printf("%08ld: %08x\n", pgit * sizeof(uint32_t), caller->mm->pgd[pgit]);
+    }
+    printf("-------------------------\n");
+    for (pgit1 = pgn_start1; pgit1 > pgn_end1; pgit1--) {
+      printf("%08ld: %08x\n", pgit1 * sizeof(uint32_t), caller->mm->pgd[pgit1]);
+    }
   }
   else {
     printf("print_pgtbl: %d - %d", start, end);

@@ -243,7 +243,13 @@ int __free(struct pcb_t *caller, int rgid)
   struct vm_rg_struct * rgnode = get_symrg_byid(caller->mm, rgid);
   /*enlist the obsoleted memory region */
   enlist_vm_freerg_list(caller->mm, *rgnode);
-  printf("\t*Finish free region=%d size=%li adrress form %ld to %ld at process %u\n",rgid,rgnode->rg_start - rgnode->rg_end,rgnode->rg_start,rgnode->rg_end,caller->pid);fflush(stdout);
+  if (rgnode->vmaid == 1) {
+      printf("\t*Finish free region=%d size=%li adrress form %ld to %ld at process %u\n",rgid,rgnode->rg_start - rgnode->rg_end,rgnode->rg_start,rgnode->rg_end,caller->pid);fflush(stdout);
+  }
+  else {
+      printf("\t*Finish free region=%d size=%li adrress form %ld to %ld at process %u\n",rgid,rgnode->rg_end - rgnode->rg_start,rgnode->rg_start,rgnode->rg_end,caller->pid);fflush(stdout);
+
+  }
   print_list_rg(caller->mm->mmap->vm_freerg_list);
   print_list_rg(caller->mm->mmap->vm_next->vm_freerg_list);
   pthread_mutex_unlock(&mm_lock);
