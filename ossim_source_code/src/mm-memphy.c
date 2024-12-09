@@ -161,17 +161,17 @@ int MEMPHY_dump(struct memphy_struct * mp)
     /*TODO dump memphy contnt mp->storage 
      *     for tracing the memory content
      */
-   printf("\tMEMPHY CONTENT:\n");fflush(stdout);
+   printf("\t-----[Begin] RAM content-----\n");fflush(stdout);
    if (!mp || !mp->storage) {
-      printf("Memory not found!");
+      printf("RAM empty!");
       return -1;
    }
    for (int i = 0; i < mp->maxsz; i++) {
-      if (mp->storage[i]<0) {
-         printf("\t\tFrame %d, Index %d, Content %d \n", i/PAGING_PAGESZ, i% PAGING_PAGESZ, mp->storage[i]); fflush(stdout);
+      if (mp->storage[i] != (BYTE)0) {
+         printf("\tFrame %d, Index %d, Content %d \n", i/PAGING_PAGESZ, i% PAGING_PAGESZ, mp->storage[i]); fflush(stdout);
       }
    }
-   printf("\tMEMPHY END!\n"); fflush(stdout);
+   printf("\t-----[End] RAM content-------\n"); fflush(stdout);
    return 0;
 }
 

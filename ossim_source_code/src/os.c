@@ -127,9 +127,6 @@ static void * ld_routine(void * args) {
 		proc->vmemsz = vmemsz;
 #endif
 		init_mm(proc->mm, proc, proc->vmemsz);
-		// print_list_vma(proc->mm->mmap);
-		// print_list_rg(proc->mm->mmap->vm_freerg_list);
-		// print_list_rg(proc->mm->mmap->vm_next->vm_freerg_list);
 		proc->mram = mram;
 		proc->mswp = mswp;
 		proc->active_mswp = active_mswp;

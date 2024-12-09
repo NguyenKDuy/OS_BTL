@@ -31,7 +31,7 @@ int init_pte(uint32_t *pte,
 
       SETVAL(*pte, fpn, PAGING_PTE_FPN_MASK, PAGING_PTE_FPN_LOBIT); 
     } else { // page swapped
-      SETBIT(*pte, PAGING_PTE_PRESENT_MASK);
+      CLRBIT(*pte, PAGING_PTE_PRESENT_MASK);
       SETBIT(*pte, PAGING_PTE_SWAPPED_MASK);
       CLRBIT(*pte, PAGING_PTE_DIRTY_MASK);
 
@@ -51,7 +51,7 @@ int init_pte(uint32_t *pte,
  */
 int pte_set_swap(uint32_t *pte, int swptyp, int swpoff)
 {
-  SETBIT(*pte, PAGING_PTE_PRESENT_MASK);
+  CLRBIT(*pte, PAGING_PTE_PRESENT_MASK);
   SETBIT(*pte, PAGING_PTE_SWAPPED_MASK);
 
   SETVAL(*pte, swptyp, PAGING_PTE_SWPTYP_MASK, PAGING_PTE_SWPTYP_LOBIT);
@@ -92,22 +92,26 @@ int vmap_page_range(struct pcb_t *caller, // process call
   int pgn = PAGING_PGN(addr);
 
   /* TODO: update the rg_end and rg_start of ret_rg 
-  //ret_rg->rg_end =  ....
-  //ret_rg->rg_start = ...
-  //ret_rg->vmaid = ...
   */
-
+  ret_rg->rg_end = addr + pgnum*PAGING_PAGESZ;
+  ret_rg->rg_start = addr;
+  ret_rg->vmaid = caller->mm->mmap->vm_id;
+  caller->mm->mmap->sbrk = ret_rg->rg_end;
   fpit->fp_next = frames;
-
+  
   /* TODO map range of frame to address space 
    *      in page table pgd in caller->mm
    */
-
-   /* Tracking for later page replacement activities (if needed)
+  while (pgit <pgnum && fpit->fp_next !=NULL) {
+    /* Tracking for later page replacement activities (if needed)
     * Enqueue new usage page */
+   fpit = fpit->fp_next;
+   pte_set_fpn(&caller->mm->pgd[pgn+pgit], fpit->fpn);
+   printf("\t*Mapping Process: pgd [%d] -> fpn [%d]\n", pgn+pgit, fpit->fpn);fflush(stdout);
+  //  print_list_vma(caller->mm->mmap);
    enlist_pgn_node(&caller->mm->fifo_pgn, pgn+pgit);
-
-
+   pgit++;
+  }
   return 0;
 }
 
@@ -121,7 +125,7 @@ int vmap_page_range(struct pcb_t *caller, // process call
 int alloc_pages_range(struct pcb_t *caller, int req_pgnum, struct framephy_struct** frm_lst)
 {
   int pgit, fpn;
-  //struct framephy_struct *newfp_str;
+  struct framephy_struct *newfp_str;
 
 
   /* TODO: allocate the page 
@@ -130,11 +134,51 @@ int alloc_pages_range(struct pcb_t *caller, int req_pgnum, struct framephy_struc
   */
   for(pgit = 0; pgit < req_pgnum; pgit++)
   {
-    if(MEMPHY_get_freefp(caller->mram, &fpn) == 0)
-   {
-     
-   } else {  // ERROR CODE of obtaining somes but not enough frames
-   } 
+    newfp_str = (struct framephy_struct *)malloc(sizeof(struct framephy_struct ));
+    if(MEMPHY_get_freefp(caller->mram, &fpn) < 0)
+    {  // ERROR CODE of obtaining somes but not enough frames
+      printf("Have no free RAM, need to find victim and swap");fflush(stdout);
+      int vicpgn, swpfpn;
+      if (find_victim_page(caller->mm, &vicpgn) == -1) {
+        printf("\tHave no victim to swap");fflush(stdout);
+        return -1;
+      }   
+      uint32_t vicpte = caller->mm->pgd[vicpgn];
+      fpn = PAGING_FPN(vicpte);
+      printf("\tVictim pgn: %d --> Victim fpn: %d\n", vicpgn, fpn); fflush(stdout);
+      int active_mswp_index;
+      for (int i = 0; i < PAGING_MAX_MMSWP; i ++) {
+        if (caller->active_mswp == caller->mswp[i]) active_mswp_index = i;
+      }
+      if (MEMPHY_get_freefp(caller->active_mswp, & swpfpn) == -1) {
+        int i;
+        for (i = 0; i < PAGING_MAX_MMSWP; i++) {
+          if (MEMPHY_get_freefp(caller->mswp[i], &swpfpn) == 0) {
+            caller->active_mswp = caller->mswp[i];
+            active_mswp_index = i;
+            break;
+          }
+        }
+        if (i == PAGING_MAX_MMSWP) {
+          printf("\tHave no free SWAP memory to use\n");
+          return -3000; 
+          }//Default only use 1 SWAP so dont have to ite all SWAP memory index
+        printf("\tActive SWAP [%d] has free frame\n", active_mswp_index);fflush(stdout);
+      }
+      printf("Swap fpn %d -> swpfpn %d\n", fpn, swpfpn);fflush(stdout);
+      __swap_cp_page(caller->mram, fpn, caller->active_mswp, swpfpn);
+      pte_set_swap(&caller->mm->pgd[vicpgn], active_mswp_index, swpfpn);
+   }
+   newfp_str->fpn = fpn;
+   newfp_str->owner = caller->mm; 
+   if (*frm_lst == NULL) {
+    *frm_lst = newfp_str;
+    newfp_str->fp_next = NULL;
+   }
+   else {
+    newfp_str->fp_next = *frm_lst;
+    *frm_lst  = newfp_str;
+   }
  }
 
   return 0;
