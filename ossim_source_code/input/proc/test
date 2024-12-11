@@ -1,13 +1,12 @@
-1 12
-malloc 300 0
+1 11
 malloc 300 1
-malloc 300 1
-malloc 300 1
-malloc 300 1
-alloc 300 2
-alloc 300 2
-alloc 300 2
-alloc 300 2
-alloc 300 2
-write 22 1 0
-read 1 0 3
+malloc 300 4
+malloc 400 2
+free 4
+free 1
+dump 4
+dump 1
+malloc 400 3
+dump 3
+write 111 3 192
+dump 3

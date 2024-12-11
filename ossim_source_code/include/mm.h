@@ -94,9 +94,9 @@
 
 /* Memory range operator */
 /* TODO implement the INCLUDE checking mechanism - currently dummy op only */
-#define INCLUDE(x1,x2,y1,y2) (((x2-y2)*(y1-x1) >= 0)?1:0)
+#define INCLUDE(x1,x2,y1,y2) (((y1 > x1) && (x2 >y2)))
 /* TODO implement the OVERLAP checking mechanism - currently dummy op only */
-#define OVERLAP(x1,x2,y1,y2) ((x2 >y1) && (y2 >x1))
+#define OVERLAP(x1,x2,y1,y2) ((x2 > y1) && (y2 >x1))
 
 /* VM region prototypes */
 struct vm_rg_struct * init_vm_rg(int rg_start, int rg_endi, int vmaid);
@@ -110,6 +110,7 @@ int __swap_cp_page(struct memphy_struct *mpsrc, int srcfpn,
                 struct memphy_struct *mpdst, int dstfpn) ;
 int pte_set_fpn(uint32_t *pte, int fpn);
 int pte_set_swap(uint32_t *pte, int swptyp, int swpoff);
+
 int init_pte(uint32_t *pte,
              int pre,    // present
              int fpn,    // FPN
@@ -126,6 +127,8 @@ int init_mm(struct mm_struct *mm, struct pcb_t *caller, int heap_sz);
 int pgalloc(struct pcb_t *proc, uint32_t size, uint32_t reg_index);
 int pgmalloc(struct pcb_t *proc, uint32_t size, uint32_t reg_index);
 int pgfree_data(struct pcb_t *proc, uint32_t reg_index);
+int __dump(struct pcb_t *caller, int rgid);
+int pgdump(struct pcb_t *proc, uint32_t reg_index);
 int pgread(
 		struct pcb_t * proc, // Process executing the instruction
 		uint32_t source, // Index of source register

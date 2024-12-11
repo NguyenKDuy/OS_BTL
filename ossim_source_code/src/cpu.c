@@ -90,6 +90,9 @@ int run(struct pcb_t * proc) {
 		stat = write(proc, ins.arg_0, ins.arg_1, ins.arg_2);
 #endif
 		break;
+	case OP_DUMP:
+		stat = pgdump(proc, ins.arg_0);
+	break;
 	default:
 		stat = 1;
 	}

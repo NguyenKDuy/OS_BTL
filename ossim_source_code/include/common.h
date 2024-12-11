@@ -31,7 +31,8 @@ enum ins_opcode_t {
 #endif
 	FREE,	// Deallocated a memory block
 	READ,	// Write data to a byte on memory
-	WRITE	// Read data from a byte on memory
+	WRITE,	// Read data from a byte on memory
+	OP_DUMP
 };
 
 /* instructions executed by the CPU */

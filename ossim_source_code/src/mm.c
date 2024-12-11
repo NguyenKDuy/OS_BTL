@@ -105,7 +105,7 @@ int vmap_page_range(struct pcb_t *caller, // process call
         * Enqueue new usage page */
       fpit = fpit->fp_next;
       pte_set_fpn(&caller->mm->pgd[pgn+pgit], fpit->fpn);
-      printf("\t*Mapping Process: pgd [%d] -> fpn [%d]\n", pgn+pgit, fpit->fpn);fflush(stdout);
+      printf("\t*Mapping proc=%d: pgd [%d] -> fpn [%d]\n",caller->pid, pgn+pgit, fpit->fpn);fflush(stdout);
       enlist_pgn_node(&caller->mm->fifo_pgn, pgn+pgit);
       pgit++;
       }
@@ -120,9 +120,9 @@ int vmap_page_range(struct pcb_t *caller, // process call
     /* Tracking for later page replacement activities (if needed)
     * Enqueue new usage page */
       fpit = fpit->fp_next;
-      pte_set_fpn(&caller->mm->pgd[pgn+pgit], fpit->fpn);
-      printf("\t*Mapping Process: pgd [%d] -> fpn [%d]\n", pgn+pgit, fpit->fpn);fflush(stdout);
-      enlist_pgn_node(&caller->mm->fifo_pgn, pgn+pgit);
+      pte_set_fpn(&caller->mm->pgd[pgn-pgit], fpit->fpn);
+      printf("\t*Mapping proc=%d: pgd [%d] -> fpn [%d]\n",caller->pid, pgn-pgit, fpit->fpn);fflush(stdout);
+      enlist_pgn_node(&caller->mm->fifo_pgn, pgn-pgit);
       pgit++;
     }
   }
@@ -266,7 +266,6 @@ int __swap_cp_page(struct memphy_struct *mpsrc, int srcfpn,
     MEMPHY_read(mpsrc, addrsrc, &data);
     MEMPHY_write(mpdst, addrdst, data);
   }
-
   return 0;
 }
 
@@ -421,7 +420,7 @@ int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
   pgn_start = PAGING_PGN(start);
   pgn_end = PAGING_PGN(end);
   if (start1 != end1) {
-    pgn_start1 = PAGING_PGN(start1)+1;
+    pgn_start1 = PAGING_PGN(start1);
     pgn_end1 = PAGING_PGN(end1)+1;
     printf("print_pgtbl: %d - %d, %d - %d\n", start, end, start1, end1);
     if (caller == NULL) {printf("NULL caller\n"); return -1;}
@@ -430,7 +429,7 @@ int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
      printf("%08ld: %08x\n", pgit * sizeof(uint32_t), caller->mm->pgd[pgit]);
     }
     printf("-------------------------\n");
-    for (pgit1 = pgn_start1; pgit1 > pgn_end1; pgit1--) {
+    for (pgit1 = pgn_start1; pgit1 >= pgn_end1; pgit1--) {
       printf("%08ld: %08x\n", pgit1 * sizeof(uint32_t), caller->mm->pgd[pgit1]);
     }
   }

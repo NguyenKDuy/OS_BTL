@@ -11,6 +11,7 @@ static uint32_t avail_pid = 1;
 #define OPT_FREE	"free"
 #define OPT_READ	"read"
 #define OPT_WRITE	"write"
+#define OPT_DUMP     "dump"
 #ifdef MM_PAGING
 #define OPT_MALLOC	"malloc"
 #endif
@@ -30,6 +31,8 @@ static enum ins_opcode_t get_opcode(char * opt) {
 		return READ;
 	}else if (!strcmp(opt, OPT_WRITE)) {
 		return WRITE;
+	} else if (!strcmp(opt, OPT_DUMP)) {
+		return OP_DUMP;
 	}else{
 		printf("Opcode: %s\n", opt);
 		exit(1);
@@ -96,6 +99,9 @@ struct pcb_t * load(const char * path) {
 				&proc->code->text[i].arg_2
 			);
 			break;	
+		case OP_DUMP:
+			fscanf(file, "%u\n", &proc->code->text[i].arg_0);
+			break;
 		default:
 			printf("Opcode: %s\n", opcode);
 			exit(1);
